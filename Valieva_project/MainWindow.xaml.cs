@@ -23,7 +23,7 @@ namespace Valieva_project
         public MainWindow()
         {
             InitializeComponent();
-            MainFrame.Navigate(new ServicePage());
+            MainFrame.Navigate(new AgentPage());
             Manager.MainFrame = MainFrame;
         }
 

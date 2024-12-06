@@ -18,11 +18,14 @@ namespace Valieva_project
     /// <summary>
     /// Логика взаимодействия для ServicePage.xaml
     /// </summary>
-    public partial class ServicePage : Page
+    public partial class AgentPage : Page
     {
-        public ServicePage()
+        public AgentPage()
         {
             InitializeComponent();
+            var currentAgents = ВалиеваГлазкиSaveEntities.GetContext().Agent.ToList();
+            AgentListView.ItemsSource = currentAgents;
+
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
