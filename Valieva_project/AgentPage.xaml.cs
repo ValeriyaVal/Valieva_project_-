@@ -20,17 +20,262 @@ namespace Valieva_project
     /// </summary>
     public partial class AgentPage : Page
     {
+        int CountRecords;
+        int CountPage;
+        int CurrentPage = 0;
+
+        public List<Agent> CurrentPageList = new List<Agent>();
+        public List<Agent> TableList;
+
         public AgentPage()
         {
             InitializeComponent();
-            var currentAgents = ВалиеваГлазкиSaveEntities.GetContext().Agent.ToList();
-            AgentListView.ItemsSource = currentAgents;
+            var currentServices = ВалиеваГлазкиSaveEntities.GetContext().Agent.ToList();
+
+            ServiceListView.ItemsSource = currentServices;
+            ServiceListView.SelectedIndex = 0;
+            UpdateAgents();
+        }
+
+        private void ChangePage(int direction, int? selectedPage)
+        {
+            CurrentPageList.Clear();
+            CountRecords = TableList.Count;
+            if (CountRecords % 10 > 0)
+            {
+                CountPage = CountRecords / 10 + 1;
+            }
+            else
+            {
+                CountPage = CountRecords / 10;
+            }
+
+            Boolean Ifupdate = true;
+
+            int min;
+            if (selectedPage.HasValue)
+            {
+                if (selectedPage >= 0 && selectedPage <= CountPage)
+                {
+                    CurrentPage = (int)selectedPage;
+                    min = CurrentPage * 10 + 10 < CountRecords ? CurrentPage * 10 + 10 : CountRecords;
+                    for (int i = CurrentPage * 10; i < min; i++)
+                    {
+                        CurrentPageList.Add(TableList[i]);
+                    }
+                }
+            }
+            else
+            {
+                switch (direction)
+                {
+                    case 1:
+                        if (CurrentPage > 0)
+                        {
+                            CurrentPage--;
+                            min = CurrentPage * 10 + 10 < CountRecords ? CurrentPage * 10 + 10 : CountRecords; 
+                            for (int i = CurrentPage * 10; i < min; i++)
+                            {
+                                CurrentPageList.Add(TableList[i]);
+                            }
+
+                        }
+                        else
+                        {
+                            Ifupdate = false;
+                        }
+                        break;
+
+                    case 2:
+                        if (CurrentPage < CountPage - 1)
+                        {
+                            CurrentPage++;
+                            min = CurrentPage * 10 + 10 < CountRecords ? CurrentPage * 10 + 10 : CountRecords;
+                            for (int i = CurrentPage * 10; i < min; i++)
+                            {
+                                CurrentPageList.Add(TableList[i]);
+                            }
+                        }
+                        else
+                        {
+                            Ifupdate = false;
+                        }
+                        break;
+                }
+
+            }
+            if (Ifupdate)
+            {
+                PageListBox.Items.Clear();
+
+                for (int i = 1; i <= CountPage; i++)
+                {
+                    PageListBox.Items.Add(i);
+                }
+                PageListBox.SelectedIndex = CurrentPage;
+
+                min = CurrentPage * 10 + 10 < CountRecords ? CurrentPage * 10 + 10 : CountRecords;
+                TBCount.Text = min.ToString();
+                TBAllRecords.Text = " из " + CountRecords.ToString();
+
+                ServiceListView.ItemsSource = CurrentPageList;
+                ServiceListView.Items.Refresh();
+
+            }
+        }
+
+        private void UpdateAgents()
+        {
+            var currentAgents =ВалиеваГлазкиSaveEntities.GetContext().Agent.ToList();
+
+            currentAgents = currentAgents.Where(p => p.Title.ToLower().Contains(TBSearch.Text.ToLower()) || p.Phone.Replace("+7", "8").Replace("(", "").Replace(") ", "").Replace(" ", "").Replace("-", "").Contains(TBSearch.Text.Replace("+7", "8").Replace("(", "").Replace(") ", "").Replace(" ", "").Replace("-", ""))
+            || p.Email.ToLower().Contains(TBSearch.Text.ToLower())).ToList();
+
+
+            switch (SortCombo.SelectedIndex)
+            {
+                case 0:
+                    break;
+                case 1:
+                    currentAgents = currentAgents.OrderBy(p => p.Title).ToList();
+                    break;
+                case 2:
+                    currentAgents = currentAgents.OrderByDescending(p => p.Title).ToList();
+                    break;
+                case 5:
+                    currentAgents = currentAgents.OrderBy(p => p.Priority).ToList();
+                    break;
+                case 6:
+                    currentAgents = currentAgents.OrderByDescending(p => p.Priority).ToList();
+                    break;
+            }
+            
+
+            //if (SortCombo.SelectedIndex == 0)
+            //    currentAgents = currentAgents.OrderBy(p => p.Title).ToList();
+            //if (SortCombo.SelectedIndex == 1)
+            //    currentAgents = currentAgents.OrderByDescending(p => p.Title).ToList();
+            ////if (SortCombo.SelectedIndex == 2)
+            ////    currentAgents = currentAgents.OrderBy(p => p.SaleProduct).ToList();
+            ////if (SortCombo.SelectedIndex == 3)
+            ////    currentAgents = currentAgents.OrderByDescending(p => p.SaleProduct).ToList();
+            //if (SortCombo.SelectedIndex == 4)
+            //    currentAgents = currentAgents.OrderBy(p => p.Priority).ToList();
+            //if (SortCombo.SelectedIndex == 5)
+            //    currentAgents = currentAgents.OrderByDescending(p => p.Priority).ToList();
+
+
+            if (FilterCombo.SelectedIndex == 0)
+                currentAgents = currentAgents.Where(p => (p.AgentTypeID >= 1 && p.AgentTypeID <= 6)).ToList();
+            if (FilterCombo.SelectedIndex == 1)
+                currentAgents = currentAgents.Where(p => (p.AgentTypeID == 1)).ToList();
+            if (FilterCombo.SelectedIndex == 2)
+                currentAgents = currentAgents.Where(p => (p.AgentTypeID == 2)).ToList();
+            if (FilterCombo.SelectedIndex == 3)
+                currentAgents = currentAgents.Where(p => (p.AgentTypeID == 3)).ToList();
+            if (FilterCombo.SelectedIndex == 4)
+                currentAgents = currentAgents.Where(p => (p.AgentTypeID == 4)).ToList();
+            if (FilterCombo.SelectedIndex == 5)
+                currentAgents = currentAgents.Where(p => (p.AgentTypeID == 5)).ToList();
+            if (FilterCombo.SelectedIndex == 6)
+                currentAgents = currentAgents.Where(p => (p.AgentTypeID == 6)).ToList();
+
+            ServiceListView.ItemsSource = currentAgents;
+            ServiceListView.Items.Refresh();
+
+            TableList = currentAgents;
+            ChangePage(0, 0);
 
         }
+
+
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             Manager.MainFrame.Navigate(new AddEditPage());
+        }
+
+        private void TBSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateAgents();
+            
+        }
+
+        private void ComboType_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateAgents();
+        }
+
+        private void ComboSort_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateAgents();
+        }
+
+        private void TBSearch_TextChanged_1(object sender, TextChangedEventArgs e)
+        {
+            UpdateAgents();
+        }
+
+        private void AgentListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateAgents();
+
+        }
+
+        private void LeftDirButton_Click(object sender, RoutedEventArgs e)
+        {
+            ChangePage(1, null);
+        }
+
+        private void RightDirButton_Click(object sender, RoutedEventArgs e)
+        {
+            ChangePage(2, null);
+        }
+
+        private void TBSearch_TextChanged_2(object sender, TextChangedEventArgs e)
+        {
+            UpdateAgents();
+        }
+
+        private void SortCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateAgents();
+
+        }
+
+        private void FilterCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateAgents();
+        }
+
+        private void AddButton_Click(object sender, RoutedEventArgs e)
+        {
+            UpdateAgents();
+        }
+
+        private void ChangePriority_Click(object sender, RoutedEventArgs e)
+        {
+            UpdateAgents();
+        }
+
+        private void ServiceListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateAgents();
+        }
+
+        private void EditBtn_Click(object sender, RoutedEventArgs e)
+        {
+            UpdateAgents();
+        }
+
+        private void PageListBox_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            UpdateAgents();
+        }
+
+        private void PageListBox_MouseUp_1(object sender, MouseButtonEventArgs e)
+        {
+            ChangePage(0, Convert.ToInt32(PageListBox.SelectedItem.ToString()) - 1);
         }
     }
 }
