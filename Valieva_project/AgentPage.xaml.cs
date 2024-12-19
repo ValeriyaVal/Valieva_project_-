@@ -23,6 +23,7 @@ namespace Valieva_project
         int CountRecords;
         int CountPage;
         int CurrentPage = 0;
+        private Agent CurrentAgent = new Agent();
 
         public List<Agent> CurrentPageList = new List<Agent>();
         public List<Agent> TableList;
@@ -142,6 +143,13 @@ namespace Valieva_project
                 case 2:
                     currentAgents = currentAgents.OrderByDescending(p => p.Title).ToList();
                     break;
+                case 3:
+                    currentAgents = currentAgents.OrderBy(p => p.Discount).ToList();
+                    break;
+
+                case 4:
+                    currentAgents = currentAgents.OrderByDescending(p => p.Discount).ToList();
+                    break;
                 case 5:
                     currentAgents = currentAgents.OrderBy(p => p.Priority).ToList();
                     break;
@@ -192,7 +200,7 @@ namespace Valieva_project
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            Manager.MainFrame.Navigate(new AddEditPage());
+          //  Manager.MainFrame.Navigate(new AddEditPage());
         }
 
         private void TBSearch_TextChanged(object sender, TextChangedEventArgs e)
@@ -261,10 +269,19 @@ namespace Valieva_project
         private void ServiceListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             UpdateAgents();
+            if (ServiceListView.SelectedItems.Count > 1)
+            {
+                ChangePriorityButton.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                ChangePriorityButton.Visibility = Visibility.Hidden;
+            }
         }
 
         private void EditBtn_Click(object sender, RoutedEventArgs e)
         {
+            Manager.MainFrame.Navigate(new AddEditPage((sender as Button).DataContext as Agent));
             UpdateAgents();
         }
 
@@ -276,6 +293,87 @@ namespace Valieva_project
         private void PageListBox_MouseUp_1(object sender, MouseButtonEventArgs e)
         {
             ChangePage(0, Convert.ToInt32(PageListBox.SelectedItem.ToString()) - 1);
+        }
+
+        private void AddButton_Click_1(object sender, RoutedEventArgs e)
+        {
+            //Manager.MainFrame.Navigate(new AddEditPage(null));
+            Manager.MainFrame.Navigate(new AddEditPage(null));
+            UpdateAgents();
+
+        }
+
+        private void ChangePriorityButton_Click(object sender, RoutedEventArgs e)
+        {
+            int maxPriority = 0;
+            foreach (Agent agent in ServiceListView.SelectedItems)
+            {
+                if (agent.Priority > maxPriority)
+                    maxPriority = agent.Priority;
+            }
+
+            SetWindow myWindow = new SetWindow(maxPriority);
+            myWindow.ShowDialog();
+
+            if (string.IsNullOrEmpty(myWindow.TBPriority.Text))
+            {
+                MessageBox.Show("Изменение не произошло");
+            }
+            else
+            {
+                // Проверяем, является ли введенное значение числом
+                if (int.TryParse(myWindow.TBPriority.Text, out int newPriority))
+                {
+                    // Проверяем, является ли новое значение приоритета отрицательным
+                    if (newPriority < 0)
+                    {
+                        MessageBox.Show("Приоритет не может быть отрицательным.");
+                        return; // Выход из метода, если приоритет отрицательный
+                    }
+
+                    foreach (Agent agent in ServiceListView.SelectedItems)
+                    {
+                        agent.Priority = newPriority;
+                    }
+
+                    try
+                    {
+                        ВалиеваГлазкиSaveEntities.GetContext().SaveChanges();
+                        MessageBox.Show("Информация сохранена");
+                        UpdateAgents();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message.ToString());
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Введите корректное числовое значение для приоритета.");
+                }
+            }
+        }
+
+        private void AddBtn_Click(object sender, RoutedEventArgs e)
+        {
+            Manager.MainFrame.Navigate(new AddEditPage(null));
+
+        }
+
+        private void History_Click(object sender, RoutedEventArgs e)
+        {
+            Manager.MainFrame.Navigate(new SalePage(CurrentAgent));
+
+        }
+
+        private void Page_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (Visibility == Visibility.Visible)
+            {
+                ВалиеваГлазкиSaveEntities.GetContext().ChangeTracker.Entries().ToList().ForEach(p => p.Reload());
+                ServiceListView.ItemsSource = ВалиеваГлазкиSaveEntities.GetContext().Agent.ToList();
+            }
+
         }
     }
 }

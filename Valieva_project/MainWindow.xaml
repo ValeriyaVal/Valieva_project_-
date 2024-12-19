@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Valieva_project"
         mc:Ignorable="d"
-        Title="Валиева" Height="450" Width="800" FontFamily="Century Gothic" Icon="/ресурсы/Глазки-save.ico">
+        Title="Валиева" Height="650" Width="800" FontFamily="Century Gothic" Icon="/ресурсы/Глазки-save.ico">
     
  <Grid>
     <Grid.RowDefinitions>
